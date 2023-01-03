@@ -57,7 +57,7 @@ app.post('/login', async (req, res) => {
 
 })
 
-app.get('/profile', validateJwt, async (req, res, next) => {
+const findAndAssignUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.user._id)
         if (!user) {
@@ -68,8 +68,22 @@ app.get('/profile', validateJwt, async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-}, (req, res)=>{
+}
+
+const isAuthenticated = express.Router().use(validateJwt,findAndAssignUser)
+
+app.get('/profile', isAuthenticated, (req, res)=>{
+    throw new Error('nuevo error')
     res.send(req.user)
+})
+
+app.use((err,req,res,next)=>{
+    console.error('Nuevo error', err.stack)
+    next(err)
+})
+
+app.use((err,req,res,next)=>{
+    res.send('Ha ocurrido un error ')
 })
 
 app.listen(3000, () => {
